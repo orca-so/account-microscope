@@ -1,17 +1,17 @@
-import { PublicKey, AccountInfo, GetProgramAccountsFilter } from "@solana/web3.js";
-import { ParsableWhirlpool, PriceMath, WhirlpoolData, buildDefaultAccountFetcher, TickArrayData, PoolUtil, TICK_ARRAY_SIZE, TickUtil, MIN_TICK_INDEX, MAX_TICK_INDEX, PDAUtil, PositionData, ParsablePosition, collectFeesQuote, TickArrayUtil, collectRewardsQuote, TokenAmounts, CollectFeesQuote, CollectRewardsQuote, WhirlpoolsConfigData, FeeTierData, ParsableWhirlpoolsConfig, ParsableFeeTier, ParsableTickArray, TickData, PositionBundleData, ParsablePositionBundle, PositionBundleUtil, POSITION_BUNDLE_SIZE, getAccountSize, AccountName, IGNORE_CACHE, WhirlpoolsConfigExtensionData, ParsableWhirlpoolsConfigExtension, TokenBadgeData, ParsableTokenBadge } from "@orca-so/whirlpools-sdk";
-import { PositionUtil, PositionStatus } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { Address, BN } from "@coral-xyz/anchor";
-import { getAmountDeltaA, getAmountDeltaB } from "@orca-so/whirlpools-sdk/dist/utils/math/token-math";
 import { AddressUtil, DecimalUtil } from "@orca-so/common-sdk";
-import { AccountMetaInfo, bn2u64, getAccountInfo, toFixedDecimal, toMeta } from "./account";
-import { getConnection } from "./client";
-import { getTokenList, TokenInfo } from "./orcaapi";
-import Decimal from "decimal.js";
-import moment from "moment";
+import { AccountName, buildDefaultAccountFetcher, collectFeesQuote, CollectFeesQuote, collectRewardsQuote, CollectRewardsQuote, FeeTierData, getAccountSize, IGNORE_CACHE, MAX_TICK_INDEX, MIN_TICK_INDEX, ParsableFeeTier, ParsablePosition, ParsablePositionBundle, ParsableTickArray, ParsableTokenBadge, ParsableWhirlpool, ParsableWhirlpoolsConfig, ParsableWhirlpoolsConfigExtension, PDAUtil, PoolUtil, POSITION_BUNDLE_SIZE, PositionBundleData, PositionBundleUtil, PositionData, PriceMath, TICK_ARRAY_SIZE, TickArrayData, TickArrayUtil, TickData, TickUtil, TokenAmounts, TokenBadgeData, WhirlpoolData, WhirlpoolsConfigData, WhirlpoolsConfigExtensionData } from "@orca-so/whirlpools-sdk";
+import { getAmountDeltaA, getAmountDeltaB } from "@orca-so/whirlpools-sdk/dist/utils/math/token-math";
+import { PositionStatus, PositionUtil } from "@orca-so/whirlpools-sdk/dist/utils/position-util";
 import { TokenExtensionUtil } from "@orca-so/whirlpools-sdk/dist/utils/public/token-extension-util";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token-2022";
+import { GetProgramAccountsFilter, PublicKey } from "@solana/web3.js";
+import Decimal from "decimal.js";
+import moment from "moment";
+import { AccountMetaInfo, bn2u64, getAccountInfo, toFixedDecimal, toMeta } from "./account";
+import { getConnection } from "./client";
+import { getTokenList, TokenInfo } from "./orcaapi";
 
 const NEIGHBORING_TICK_ARRAY_NUM = 9
 const ISOTOPE_TICK_SPACINGS = [1, 2, 4, 8, 16, 32, 64, 96, 128, 256, 512, 32896];
@@ -158,11 +158,11 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
   const currentStartTickIndex = TickUtil.getStartTickIndex(whirlpoolData.tickCurrentIndex, whirlpoolData.tickSpacing);
   const tickArrayStartIndexes = [];
   const tickArrayPubkeys = [];
-  for (let offset=-NEIGHBORING_TICK_ARRAY_NUM; offset <= NEIGHBORING_TICK_ARRAY_NUM; offset++) {
+  for (let offset = -NEIGHBORING_TICK_ARRAY_NUM; offset <= NEIGHBORING_TICK_ARRAY_NUM; offset++) {
     try {
       const startTickIndex = TickUtil.getStartTickIndex(whirlpoolData.tickCurrentIndex, whirlpoolData.tickSpacing, offset);
-      if ( startTickIndex+ticksInArray <= MIN_TICK_INDEX ) continue;
-      if ( startTickIndex > MAX_TICK_INDEX ) continue;
+      if (startTickIndex + ticksInArray <= MIN_TICK_INDEX) continue;
+      if (startTickIndex > MAX_TICK_INDEX) continue;
       tickArrayStartIndexes.push(startTickIndex);
       tickArrayPubkeys.push(PDAUtil.getTickArray(accountInfo.owner, pubkey, startTickIndex).publicKey);
     } catch (e) {
@@ -193,8 +193,8 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
     maxTickArrayPubkey,
   ], IGNORE_CACHE);
   const fullRangeTickArrays: FullRangeTickArray[] = [
-    {pubkey: minTickArrayPubkey, startTickIndex: minStartTickIndex, isInitialized: !!tickArraysForFullRange[0]},
-    {pubkey: maxTickArrayPubkey, startTickIndex: maxStartTickIndex, isInitialized: !!tickArraysForFullRange[1]},
+    { pubkey: minTickArrayPubkey, startTickIndex: minStartTickIndex, isInitialized: !!tickArraysForFullRange[0] },
+    { pubkey: maxTickArrayPubkey, startTickIndex: maxStartTickIndex, isInitialized: !!tickArraysForFullRange[1] },
   ];
 
   // get isotope whirlpools
@@ -239,7 +239,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
     );
     tradableAmounts = calculated;
   }
-  catch ( e ) {console.log(e);}
+  catch (e) { console.error(JSON.stringify(e)) }
 
   let tickArrayTradableAmounts: TickArrayTradableAmounts = { downward: [], upward: [], error: true };
   try {
@@ -253,7 +253,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
     );
     tickArrayTradableAmounts = calculated;
   }
-  catch ( e ) {console.log(e);}
+  catch (e) { console.error(JSON.stringify(e)) }
 
   return {
     meta: toMeta(pubkey, accountInfo, slotContext),
@@ -283,9 +283,9 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
       tokenVaultR0Amount: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(vaults[2].amount, decimalsR0),
       tokenVaultR1Amount: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(vaults[3].amount, decimalsR1),
       tokenVaultR2Amount: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(vaults[4].amount, decimalsR2),
-      reward0WeeklyEmission: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[0].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR0),
-      reward1WeeklyEmission: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[1].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR1),
-      reward2WeeklyEmission: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[2].emissionsPerSecondX64.muln(60*60*24*7).shrn(64)), decimalsR2),
+      reward0WeeklyEmission: decimalsR0 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[0].emissionsPerSecondX64.muln(60 * 60 * 24 * 7).shrn(64)), decimalsR0),
+      reward1WeeklyEmission: decimalsR1 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[1].emissionsPerSecondX64.muln(60 * 60 * 24 * 7).shrn(64)), decimalsR1),
+      reward2WeeklyEmission: decimalsR2 === undefined ? undefined : DecimalUtil.fromBN(bn2u64(whirlpoolData.rewardInfos[2].emissionsPerSecondX64.muln(60 * 60 * 24 * 7).shrn(64)), decimalsR2),
       rewardLastUpdatedTimestamp: moment.unix(whirlpoolData.rewardLastUpdatedTimestamp.toNumber()),
       fullRangeTickArrays,
       neighboringTickArrays,
@@ -541,7 +541,7 @@ export async function getWhirlpoolsConfigInfo(addr: Address): Promise<Whirlpools
   const whirlpoolsConfigData = ParsableWhirlpoolsConfig.parse(pubkey, accountInfo);
 
   const tickSpacingSet: Set<number> = new Set(ISOTOPE_TICK_SPACINGS);
-  for (let tickSpacing=1; tickSpacing < 2**16; tickSpacing *= 2) {
+  for (let tickSpacing = 1; tickSpacing < 2 ** 16; tickSpacing *= 2) {
     tickSpacingSet.add(tickSpacing);
   }
 
@@ -723,7 +723,7 @@ type TickArrayTradableAmounts = {
   error: boolean,
 }
 
-function getTick(tickIndex: number, tickSpacing: number, tickarrays: TickArrayData[]): TickData|undefined {
+function getTick(tickIndex: number, tickSpacing: number, tickarrays: TickArrayData[]): TickData | undefined {
   const startTickIndex = TickUtil.getStartTickIndex(tickIndex, tickSpacing);
   for (const tickarray of tickarrays) {
     if (tickarray?.startTickIndex === startTickIndex)
@@ -741,7 +741,7 @@ function listTradableAmounts(whirlpool: WhirlpoolData, tickArrays: TickArrayData
 
   const tickCurrentIndex = whirlpool.tickCurrentIndex;
   const tickSpacing = whirlpool.tickSpacing;
-  const lowerInitializableTickIndex = Math.floor(tickCurrentIndex/tickSpacing)*tickSpacing;
+  const lowerInitializableTickIndex = Math.floor(tickCurrentIndex / tickSpacing) * tickSpacing;
   const upperInitializableTickIndex = lowerInitializableTickIndex + tickSpacing;
 
   // upward
@@ -749,11 +749,11 @@ function listTradableAmounts(whirlpool: WhirlpoolData, tickArrays: TickArrayData
   sqrtPrice = whirlpool.sqrtPrice;
   liquidity = whirlpool.liquidity;
   const upwardTradableAmount: TradableAmount[] = [];
-  for (let i=0; i<10; i++) {
-    nextTickIndex = upperInitializableTickIndex + i*tickSpacing;
+  for (let i = 0; i < 10; i++) {
+    nextTickIndex = upperInitializableTickIndex + i * tickSpacing;
     nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
-    if ( nextTick === undefined ) nextTickIndex--;
-    if ( nextTickIndex <= tickIndex ) break;
+    if (nextTick === undefined) nextTickIndex--;
+    if (nextTickIndex <= tickIndex) break;
 
     nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
     nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
@@ -767,7 +767,7 @@ function listTradableAmounts(whirlpool: WhirlpoolData, tickArrays: TickArrayData
       amountB: DecimalUtil.fromBN(new BN(deltaB), decimalsB),
     });
 
-    if ( nextTick === undefined ) break;
+    if (nextTick === undefined) break;
     tickIndex = nextTickIndex;
     sqrtPrice = nextSqrtPrice;
     liquidity = liquidity.add(nextTick.liquidityNet); // left to right, add liquidityNet
@@ -778,10 +778,10 @@ function listTradableAmounts(whirlpool: WhirlpoolData, tickArrays: TickArrayData
   sqrtPrice = whirlpool.sqrtPrice;
   liquidity = whirlpool.liquidity;
   const downwardTradableAmount: TradableAmount[] = [];
-  for (let i=0; i<10; i++) {
-    nextTickIndex = lowerInitializableTickIndex - i*tickSpacing;
+  for (let i = 0; i < 10; i++) {
+    nextTickIndex = lowerInitializableTickIndex - i * tickSpacing;
     nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
-    if ( nextTick === undefined ) break;
+    if (nextTick === undefined) break;
 
     nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
     nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
@@ -817,7 +817,7 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   const tickCurrentIndex = whirlpool.tickCurrentIndex;
   const tickSpacing = whirlpool.tickSpacing;
   const ticksInArray = tickSpacing * TICK_ARRAY_SIZE;
-  const lowerInitializableTickIndex = Math.floor(tickCurrentIndex/tickSpacing)*tickSpacing;
+  const lowerInitializableTickIndex = Math.floor(tickCurrentIndex / tickSpacing) * tickSpacing;
   const upperInitializableTickIndex = lowerInitializableTickIndex + tickSpacing;
 
   const currentTickArrayStartIndex = Math.floor(tickCurrentIndex / ticksInArray) * ticksInArray;
@@ -829,22 +829,22 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   const upwardTickArrays: TickArrayData[] = [];
   const upwardAmountA: Decimal[] = [];
   const upwardAmountB: Decimal[] = [];
-  for (let i=0; /*i<=3 && */currentTickArrayIndex+i < tickArrayPubkeys.length; i++) {
-    upwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex+i]);
-    upwardTickArrayStartIndexes.push(tickArrayStartIndexes[currentTickArrayIndex+i]);
-    upwardTickArrays.push(tickArrays[currentTickArrayIndex+i]);
+  for (let i = 0; /*i<=3 && */currentTickArrayIndex + i < tickArrayPubkeys.length; i++) {
+    upwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex + i]);
+    upwardTickArrayStartIndexes.push(tickArrayStartIndexes[currentTickArrayIndex + i]);
+    upwardTickArrays.push(tickArrays[currentTickArrayIndex + i]);
     upwardAmountA.push(new Decimal(0));
     upwardAmountB.push(new Decimal(0));
   }
 
-  const upwardLastTickIndex = Math.min(MAX_TICK_INDEX, currentTickArrayStartIndex + upwardTickArrays.length*ticksInArray);
+  const upwardLastTickIndex = Math.min(MAX_TICK_INDEX, currentTickArrayStartIndex + upwardTickArrays.length * ticksInArray);
   let upwardIndex = 0;
   tickIndex = whirlpool.tickCurrentIndex;
   sqrtPrice = whirlpool.sqrtPrice;
   liquidity = whirlpool.liquidity;
-  for (let i=0; true; i++) {
-    nextTickIndex = upperInitializableTickIndex + i*tickSpacing;
-    if ( nextTickIndex > upwardLastTickIndex ) break;
+  for (let i = 0; true; i++) {
+    nextTickIndex = upperInitializableTickIndex + i * tickSpacing;
+    if (nextTickIndex > upwardLastTickIndex) break;
 
     nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
     nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
@@ -857,10 +857,10 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
     upwardAmountB[upwardIndex] = upwardAmountB[upwardIndex].add(deltaBDecimal);
 
     nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
-    if ( nextTick !== undefined ) liquidity = liquidity.add(nextTick.liquidityNet); // left to right, add liquidityNet
+    if (nextTick !== undefined) liquidity = liquidity.add(nextTick.liquidityNet); // left to right, add liquidityNet
     tickIndex = nextTickIndex;
     sqrtPrice = nextSqrtPrice;
-    if ( nextTickIndex % ticksInArray === 0 ) upwardIndex++;
+    if (nextTickIndex % ticksInArray === 0) upwardIndex++;
   }
 
   // downward
@@ -869,22 +869,22 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   const downwardTickArrays: TickArrayData[] = [];
   const downwardAmountA: Decimal[] = [];
   const downwardAmountB: Decimal[] = [];
-  for (let i=0; /*i<=3 && */currentTickArrayIndex-i >= 0; i++) {
-    downwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex-i]);
-    downwardTickArrayStartIndexes.push(tickArrayStartIndexes[currentTickArrayIndex-i]);
-    downwardTickArrays.push(tickArrays[currentTickArrayIndex-i]);
+  for (let i = 0; /*i<=3 && */currentTickArrayIndex - i >= 0; i++) {
+    downwardTickArrayPubkeys.push(tickArrayPubkeys[currentTickArrayIndex - i]);
+    downwardTickArrayStartIndexes.push(tickArrayStartIndexes[currentTickArrayIndex - i]);
+    downwardTickArrays.push(tickArrays[currentTickArrayIndex - i]);
     downwardAmountA.push(new Decimal(0));
     downwardAmountB.push(new Decimal(0));
   }
 
-  const downwardLastTickIndex = Math.max(MIN_TICK_INDEX, currentTickArrayStartIndex - (downwardTickArrays.length - 1)*ticksInArray);
+  const downwardLastTickIndex = Math.max(MIN_TICK_INDEX, currentTickArrayStartIndex - (downwardTickArrays.length - 1) * ticksInArray);
   let downwardIndex = 0;
   tickIndex = whirlpool.tickCurrentIndex;
   sqrtPrice = whirlpool.sqrtPrice;
   liquidity = whirlpool.liquidity;
-  for (let i=0; true; i++) {
-    nextTickIndex = lowerInitializableTickIndex - i*tickSpacing;
-    if ( nextTickIndex < downwardLastTickIndex ) break;
+  for (let i = 0; true; i++) {
+    nextTickIndex = lowerInitializableTickIndex - i * tickSpacing;
+    if (nextTickIndex < downwardLastTickIndex) break;
 
     nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
     nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
@@ -897,14 +897,14 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
     downwardAmountB[downwardIndex] = downwardAmountB[downwardIndex].add(deltaBDecimal);
 
     nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
-    if ( nextTick !== undefined ) liquidity = liquidity.sub(nextTick.liquidityNet); // right to left, sub liquidityNet
+    if (nextTick !== undefined) liquidity = liquidity.sub(nextTick.liquidityNet); // right to left, sub liquidityNet
     tickIndex = nextTickIndex;
     sqrtPrice = nextSqrtPrice;
-    if ( nextTickIndex % ticksInArray === 0 ) downwardIndex++;
+    if (nextTickIndex % ticksInArray === 0) downwardIndex++;
   }
 
   const upwardTickArrayTradableAmount: TickArrayTradableAmount[] = [];
-  for (let i=0; i<upwardTickArrayPubkeys.length; i++) {
+  for (let i = 0; i < upwardTickArrayPubkeys.length; i++) {
     upwardTickArrayTradableAmount.push({
       tickArrayPubkey: upwardTickArrayPubkeys[i],
       tickArrayStartIndex: upwardTickArrayStartIndexes[i],
@@ -916,7 +916,7 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   }
 
   const downwardTickArrayTradableAmount: TickArrayTradableAmount[] = [];
-  for (let i=0; i<downwardTickArrayPubkeys.length; i++) {
+  for (let i = 0; i < downwardTickArrayPubkeys.length; i++) {
     downwardTickArrayTradableAmount.push({
       tickArrayPubkey: downwardTickArrayPubkeys[i],
       tickArrayStartIndex: downwardTickArrayStartIndexes[i],
@@ -976,7 +976,7 @@ export async function getPositionBundleInfo(addr: Address): Promise<PositionBund
   const bundledPositionDatas = bundledPositionAddresses.map((addr) => bundledPositionDatasMap.get(addr.toBase58()));
 
   const bundledPositions: BundledPositionInfo[] = [];
-  for (let i=0; i<bundledPositionDatas.length; i++) {
+  for (let i = 0; i < bundledPositionDatas.length; i++) {
     if (!bundledPositionDatas[i]) continue;
 
     const bundledPositionData = bundledPositionDatas[i];
@@ -1151,8 +1151,8 @@ export async function listPoolPositions(poolAddr: Address): Promise<PoolPosition
 
   // get positions
   const positionFilters: GetProgramAccountsFilter[] = [
-    {dataSize: getAccountSize(AccountName.Position)},
-    {memcmp: {offset: 8, bytes: poolPubkey.toBase58()}},
+    { dataSize: getAccountSize(AccountName.Position) },
+    { memcmp: { offset: 8, bytes: poolPubkey.toBase58() } },
   ];
   const accounts = await connection.getProgramAccounts(programId, {
     commitment: "confirmed",
