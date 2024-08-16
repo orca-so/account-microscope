@@ -160,7 +160,7 @@
   </Data>
   <Data name="tradable amounts (global)">
     {#if whirlpoolInfo.derived.tickArrayTradableAmounts.error}
-    error detected 😵
+    error detected 😵 - {JSON.stringify(whirlpoolInfo.derived.tickArrayTradableAmounts, undefined, 2)}
     {:else}
     <table style="border-spacing: 0;">
       <thead><th>start price</th><th>tokenA{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoA)}</th><th>tokenB{symbol_if_not_undefined(whirlpoolInfo.derived.tokenInfoB)}</th><th>pubkey</th></thead>

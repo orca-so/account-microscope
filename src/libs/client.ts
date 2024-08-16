@@ -20,7 +20,7 @@ export type RPC = {
 }
 
 const _rpclist: RPC[] = [
-  { id: "helius", name: "Mainnet HELIUS", network: "mainnet", url: "https://rpc-proxy-account-microscope-240617.yugure.dev" },
+  { id: "helius", name: "Mainnet HELIUS", network: "mainnet", url: "https://orca.rpcpool.com/ae9a156f6bdd344c8267465eb432" },
   //{ id: "everstake", name: "Mainnet Everstake", network: "mainnet", url: "https://solana-mainnet.rpc.extrnode.com" },
   //{ id: "anker", name: "Mainnet Anker", network: "mainnet", url: "https://rpc.ankr.com/solana" },
   { id: "solana", name: "Mainnet Solana", network: "mainnet", url: "https://api.mainnet-beta.solana.com" },
@@ -34,7 +34,7 @@ export function getRPCList(): RPC[] {
 }
 
 export function getRPC(): RPC {
-  for(const rpc of _rpclist) {
+  for (const rpc of _rpclist) {
     if (rpc.url === _connection.rpcEndpoint) {
       return rpc;
     }

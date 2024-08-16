@@ -239,7 +239,7 @@ export async function getWhirlpoolInfo(addr: Address): Promise<WhirlpoolInfo> {
     );
     tradableAmounts = calculated;
   }
-  catch (e) { console.error(JSON.stringify(e)) }
+  catch (e: any) { console.error(JSON.stringify(e)) }
 
   let tickArrayTradableAmounts: TickArrayTradableAmounts = { downward: [], upward: [], error: true };
   try {
@@ -842,25 +842,39 @@ function listTickArrayTradableAmounts(whirlpool: WhirlpoolData, tickArrayStartIn
   tickIndex = whirlpool.tickCurrentIndex;
   sqrtPrice = whirlpool.sqrtPrice;
   liquidity = whirlpool.liquidity;
-  for (let i = 0; true; i++) {
-    nextTickIndex = upperInitializableTickIndex + i * tickSpacing;
-    if (nextTickIndex > upwardLastTickIndex) break;
+  try {
+    for (let i = 0; true; i++) {
+      nextTickIndex = upperInitializableTickIndex + i * tickSpacing;
+      if (nextTickIndex > upwardLastTickIndex) break;
 
-    nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
-    nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
-    const deltaA = getAmountDeltaA(sqrtPrice, nextSqrtPrice, liquidity, false);
-    const deltaB = getAmountDeltaB(sqrtPrice, nextSqrtPrice, liquidity, true);
-    const deltaADecimal = DecimalUtil.fromBN(new BN(deltaA), decimalsA);
-    const deltaBDecimal = DecimalUtil.fromBN(new BN(deltaB), decimalsB);
+      console.log(`nextTickIndex: ${nextTickIndex}, upwardLastTickIndex: ${upwardLastTickIndex}`)
 
-    upwardAmountA[upwardIndex] = upwardAmountA[upwardIndex].add(deltaADecimal);
-    upwardAmountB[upwardIndex] = upwardAmountB[upwardIndex].add(deltaBDecimal);
+      nextSqrtPrice = PriceMath.tickIndexToSqrtPriceX64(nextTickIndex);
+      nextPrice = toFixedDecimal(PriceMath.tickIndexToPrice(nextTickIndex, decimalsA, decimalsB), decimalsB);
 
-    nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
-    if (nextTick !== undefined) liquidity = liquidity.add(nextTick.liquidityNet); // left to right, add liquidityNet
-    tickIndex = nextTickIndex;
-    sqrtPrice = nextSqrtPrice;
-    if (nextTickIndex % ticksInArray === 0) upwardIndex++;
+
+      console.log(`getAmountDeltaA sqrtPrice: ${sqrtPrice.toString()} nextSqrtPrice: ${nextSqrtPrice.toString()} liquidity: ${liquidity.toString()} tickSpacing: ${tickSpacing}`)
+      const deltaA = getAmountDeltaA(sqrtPrice, nextSqrtPrice, liquidity, false);
+      console.log(`getAmountDeltaB sqrtPrice: ${sqrtPrice.toString()} tick - ${PriceMath.sqrtPriceX64ToTickIndex(sqrtPrice)} nextSqrtPrice: ${nextSqrtPrice.toString()} delta - ${nextSqrtPrice.sub(sqrtPrice).toString()} nextTick - ${PriceMath.sqrtPriceX64ToTickIndex(nextSqrtPrice)} liquidity: ${liquidity.toString()} tickSpacing: ${tickSpacing}`)
+      const deltaB = getAmountDeltaB(sqrtPrice, nextSqrtPrice, liquidity, true);
+      const deltaADecimal = DecimalUtil.fromBN(new BN(deltaA), decimalsA);
+      const deltaBDecimal = DecimalUtil.fromBN(new BN(deltaB), decimalsB);
+
+      upwardAmountA[upwardIndex] = upwardAmountA[upwardIndex].add(deltaADecimal);
+      upwardAmountB[upwardIndex] = upwardAmountB[upwardIndex].add(deltaBDecimal);
+
+      console.log(`nextTickIndex: ${nextTickIndex}, deltaA: ${deltaA}, deltaB: ${deltaB}, liquidity: ${liquidity.toString()} tickSpacing: ${tickSpacing}`)
+      nextTick = getTick(nextTickIndex, tickSpacing, tickArrays);
+      console.log(`nextTick: ${JSON.stringify(nextTick)}`)
+      if (nextTick !== undefined) liquidity = liquidity.add(nextTick.liquidityNet); // left to right, add liquidityNet
+      tickIndex = nextTickIndex;
+      sqrtPrice = nextSqrtPrice;
+      if (nextTickIndex % ticksInArray === 0) upwardIndex++;
+    }
+  } catch (e: any) {
+    console.log(JSON.stringify(e))
+    console.log(`e.message: ${e.message}`)
+    throw (e)
   }
 
   // downward
